@@ -1,0 +1,5 @@
+# these files can contain the dropbox API key...
+*.pyc
+finance_track_db.py
+# these might contain private account information
+fintrack_db_*.sql

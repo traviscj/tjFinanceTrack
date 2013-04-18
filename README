@@ -1,0 +1,54 @@
+
+A few goals:
+	- plan & schedule future transactions, based on current balances
+
+SETUP:
+- Set up the database by running:
+> mkdir -p $HOME/Dropbox/Apps/tjFinanceTrack
+> sqlite3 $HOME/Dropbox/Apps/tjFinanceTrack/fintrack.db < fintrack_db.sql
+- Put finance_track.py in your path!
+
+TODO:
+	- red ink for past transactions still on pending list
+	- red ink for amounts in the negative, and ()
+
+When there is a real web interface
+	- text box adding at the bottom
+	- button to clear transaction
+
+
+Database Structure
+Semi-direct translation of the finance track spreadsheet:
+transactions:
+	- id
+	- date
+	- from_account
+	- to_account
+	- start_balance
+	- delta_balance
+but then need to reprocess the entire database to generate balances.
+
+Another approach:
+accounts:
+	- a_id
+	- balance
+settled_transactions:
+	- st_id
+	- enter_date
+	- post_date
+	- from_account
+	- to_account
+	- delta_balance
+pending_transactions:
+	- pt_id
+	- enter_date
+	- post_date
+	- from_account
+	- to_account
+	- delta_balance
+
+Then the setup is:
+- Can look at current account balances and build up pending transactions
+- Can look at backlog of transactions.
+- have a 'roll into settled' button.
+- 
