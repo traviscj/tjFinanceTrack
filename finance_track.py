@@ -49,11 +49,9 @@ class StoredSession(session.DropboxSession):
 class finance_track(object):
 	def __init__(self):
 		self.dropbox = False
-		self.database = expanduser("~/Dropbox/Apps/tjFinancerack/fintrack.db")
+		self.database = expanduser("~/Dropbox/Apps/tjFinanceTrack/fintrack.db")
 		if not exists(self.database):
 			sdg = self.dropbox_get()
-			# if not (sdg == None):
-				# return sdg
 		self.connect_db()
 	def connect_db(self):
 		self.conn = sqlite3.connect(self.database)
