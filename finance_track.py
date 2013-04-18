@@ -14,7 +14,7 @@ from finance_track_db import *
 # ACCESS_TYPE should be 'dropbox' or 'app_folder' as configured for your app
 ACCESS_TYPE = 'app_folder'
 
-
+# shamelessly stolen from the dropbox examples.
 class StoredSession(session.DropboxSession):
     """a wrapper around DropboxSession that stores a token to a file on disk"""
     TOKEN_FILE = "/tmp/token_store.txt"
