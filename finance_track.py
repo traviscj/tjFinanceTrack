@@ -146,7 +146,14 @@ class fintrackcli(cmd.Cmd):
 		except Exception, err:
 			print "couldn't add your spend transaction: ", arg
 			print "because we encountered: ", str(err)
-		
+	
+	def do_pay(self,arg):
+		try:
+			postdate, from_acc,to_acc, dbal, desc = arg.split(' ',4)
+			self.ft.newtransaction(postdate, from_acc, to_acc, dbal, desc)
+		except Exception, err:
+			print "couldn't add your spend transaction: ", arg
+			print "because we encountered: ", str(err)
 	def do_quit(self,arg):
 		sys.exit(0)
 	def do_EOF(self,arg):
