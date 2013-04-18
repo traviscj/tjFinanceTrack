@@ -113,7 +113,17 @@ class finance_track(object):
 		return self
 	def __exit__(self, type, value, traceback):
 		self.destroy()
-
+	
+	def cleartrans(self,id):
+		pending_transaction = self.cur.execute("SELECT * FROM pending_transactions WHERE id=?;", (id,)).fetchone()
+		print pending_transaction
+		tid,enter_date, post_date,from_account,to_account,delta_balance,description=pending_transaction
+		
+		self.cur.execute("INSERT INTO settled_transactions (enter_date, post_date,from_account,to_account,delta_balance,description) VALUES (?,?,?,?,?,?);", (enter_date, post_date,from_account,to_account,delta_balance,description))
+		self.cur.execute("UPDATE accounts SET balance=? WHERE a_id = ?;",(self.ACC[from_account]-delta_balance,from_account))
+		self.cur.execute("UPDATE accounts SET balance=? WHERE a_id = ?;",(self.ACC[to_account]+delta_balance,to_account))
+		self.rmtrans(tid)
+		self.refresh_balances()
 class fintrackcli(cmd.Cmd):
 	def __init__(self):
 		cmd.Cmd.__init__(self)
@@ -154,6 +164,14 @@ class fintrackcli(cmd.Cmd):
 		try:
 			postdate, from_acc,to_acc, dbal, desc = arg.split(' ',4)
 			self.ft.newtransaction(postdate, from_acc, to_acc, dbal, desc)
+		except Exception, err:
+			print "couldn't add your spend transaction: ", arg
+			print "because we encountered: ", str(err)
+	
+	def do_clear(self,arg):
+		self.ft.cleartrans(arg)
+		try:
+			pass
 		except Exception, err:
 			print "couldn't add your spend transaction: ", arg
 			print "because we encountered: ", str(err)
