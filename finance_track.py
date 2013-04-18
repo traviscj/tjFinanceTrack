@@ -26,6 +26,9 @@ class finance_track(object):
 		self.conn = sqlite3.connect(self.database)
 		self.cur = self.conn.cursor()
 		self.printed_header = False
+		self.refresh_balances()
+	
+	def refresh_balances(self)
 		acc = self.cur.execute("SELECT * FROM accounts ;")
 		self.ACC = {}
 		self.ACC_NAME = {}
