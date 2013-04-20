@@ -16,9 +16,10 @@ ACCESS_TYPE = 'app_folder'
 from DropboxStoredSession import StoredSession
 
 class finance_track(object):
-	def __init__(self):
+	def __init__(self, dbname='fintrack'):
 		self.dropbox = False
-		self.database = expanduser("~/Dropbox/Apps/tjFinanceTrack/fintrack.db")
+		self.dbdatabase = '/' + dbname + '.db'
+		self.database = expanduser("~/Dropbox/Apps/tjFinanceTrack/"+dbname+".db")
 		if not exists(self.database):
 			sdg = self.dropbox_get()
 		self.connect_db()
@@ -43,7 +44,7 @@ class finance_track(object):
 		self.conn.close()
 		if self.dropbox:
 			f= open(self.database)
-			response = self.api_client.put_file('/fintrack.db', f,overwrite=True)
+			response = self.api_client.put_file(self.dbdatabase, f,overwrite=True)
 			f.close()
 			unlink(self.database)
 	def dropbox_get(self):
@@ -55,7 +56,7 @@ class finance_track(object):
 			sess.link()
 			
 		self.api_client = client.DropboxClient(sess)
-		f, metadata = self.api_client.get_file_and_metadata('/fintrack.db')
+		f, metadata = self.api_client.get_file_and_metadata(self.dbdatabase)
 		out = NamedTemporaryFile(mode='wb',delete=False)
 		# out = open(self.database, 'wb')
 		out.write(f.read())
@@ -125,10 +126,10 @@ class finance_track(object):
 		self.rmtrans(tid)
 		self.refresh_balances()
 class fintrackcli(cmd.Cmd):
-	def __init__(self):
+	def __init__(self, dbname='fintrack'):
 		cmd.Cmd.__init__(self)
 		self.prompt = 'fintrack> '
-		self.ft = finance_track()
+		self.ft = finance_track(dbname)
 	def __enter__(self):
 		return self
 	def __exit__(self, type, value, traceback):
@@ -181,7 +182,7 @@ class fintrackcli(cmd.Cmd):
 		self.do_quit(arg)
 
 if __name__ == "__main__":
-	with fintrackcli() as cli:
+	with fintrackcli('fintrack') as cli:
 		if len(sys.argv)>1:
 			cli.onecmd (" ".join(sys.argv[1:]))
 		else:
