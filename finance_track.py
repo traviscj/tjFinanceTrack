@@ -39,7 +39,13 @@ class finance_track(object):
 			self.ACC_NAME[a_id] = a_name
 			self.ACC_SNAME[a_id] = a_short
 
+	def get_id(self, shortname):
+		for k,v in self.ACC_SNAME.iteritems():
+			if v == shortname:
+				return k
+		raise Exception("Short account name {0} not found!".format(shortname))
 	def destroy(self):
+# 		print "properly destroying ft object"
 		self.conn.commit()
 		self.conn.close()
 		if self.dropbox:
@@ -166,14 +172,16 @@ class fintrackcli(cmd.Cmd):
 			
 	def do_spend(self, arg):
 		try:
-			postdate, from_acc, dbal, desc = arg.split(' ',3)
+			postdate, from_acc_s, dbal, desc = arg.split(' ',3)
+			from_acc = self.ft.get_id(from_acc_s)
 			self.ft.newtransaction(postdate,from_acc, 1, dbal,desc)
 		except Exception, err:
 			print "couldn't add your spend transaction: ", arg
 			print "because we encountered: ", str(err)
 	def do_earn(self,arg):
 		try:
-			postdate, to_acc, dbal, desc = arg.split(' ',3)
+			postdate, to_acc_s, dbal, desc = arg.split(' ',3)
+			to_acc = self.ft.get_id(to_acc_s)
 			self.ft.newtransaction(postdate, 2, to_acc, dbal,desc)
 		except Exception, err:
 			print "couldn't add your spend transaction: ", arg
@@ -181,12 +189,29 @@ class fintrackcli(cmd.Cmd):
 	
 	def do_pay(self,arg):
 		try:
-			postdate, from_acc,to_acc, dbal, desc = arg.split(' ',4)
+			postdate, from_acc_s,to_acc_s, dbal, desc = arg.split(' ',4)
+			from_acc,to_acc = self.ft.get_id(from_acc_s), self.ft.get_id(to_acc_s)
 			self.ft.newtransaction(postdate, from_acc, to_acc, dbal, desc)
 		except Exception, err:
 			print "couldn't add your spend transaction: ", arg
 			print "because we encountered: ", str(err)
-	
+	def do_mv(self,arg):
+		# try:
+		postdate = "date('now')"
+		desc = "transfer"
+		from_acc_s,to_acc_s,dbal = arg.split(' ',2)
+		from_acc,to_acc = self.ft.get_id(from_acc_s), self.ft.get_id(to_acc_s)
+		self.ft.newtransaction(postdate, from_acc, to_acc, dbal, desc)
+		# except Exception, err:
+		# 			print "couldn't add your spend transaction: ", arg
+		# 			print "because we encountered: ", str(err)
+	def do_mka(self,arg):
+		try:
+			name,sname,balance = arg.split(' ', 2)
+			self.ft.newacct(name,sname,balance)
+		except Exception, err:
+			print "couldn't add your spend transaction: ", arg
+			print "because we encountered: ", str(err)
 	def do_clear(self,arg):
 		self.ft.cleartrans(arg)
 		try:
