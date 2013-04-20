@@ -129,25 +129,32 @@ class finance_track(object):
 	def newtransaction(self, post_date, from_acc, to_acc, dbal, desc):
 		T = (post_date, from_acc, to_acc, dbal, desc)
 		print T
-		self.cur.execute("INSERT INTO pending_transactions (enter_date, post_date,from_account,to_account,delta_balance,description) VALUES (date('now'), ?, ?, ?, ?, ?);", T)
-		
+		self.cur.execute("INSERT INTO transactions (enter_date, post_date,from_account,to_account,delta_balance,description) VALUES (date('now'), ?, ?, ?, ?, ?);", T)
+		self.conn.commit()
 	def rmtrans(self, id):
-		self.cur.execute("DELETE FROM pending_transactions WHERE id=?", (id,))
+		self.cur.execute("DELETE FROM transactions WHERE id=?", (id,))
 	def __enter__(self):
 		return self
 	def __exit__(self, type, value, traceback):
 		self.destroy()
 	
 	def cleartrans(self,id):
-		pending_transaction = self.cur.execute("SELECT * FROM pending_transactions WHERE id=?;", (id,)).fetchone()
+		# raise Exception("not implemented")
+		pending_transaction = self.cur.execute("SELECT * FROM transactions WHERE id=?;", (id,)).fetchone()
 		print pending_transaction
-		tid,enter_date, post_date,from_account,to_account,delta_balance,description=pending_transaction
+		tid,enter_date, post_date,from_account,to_account,delta_balance,description,is_pending=pending_transaction
 		
-		self.cur.execute("INSERT INTO settled_transactions (enter_date, post_date,from_account,to_account,delta_balance,description) VALUES (?,?,?,?,?,?);", (enter_date, post_date,from_account,to_account,delta_balance,description))
+		self.cur.execute("UPDATE transactions SET is_pending=0 WHERE id = ?;", (tid,))
 		self.cur.execute("UPDATE accounts SET balance=? WHERE a_id = ?;",(self.ACC[from_account]-delta_balance,from_account))
 		self.cur.execute("UPDATE accounts SET balance=? WHERE a_id = ?;",(self.ACC[to_account]+delta_balance,to_account))
+		self.conn.commit()
 		self.rmtrans(tid)
 		self.refresh_balances()
+	def newacct(self, name, shortname,startbal):
+		self.cur.execute("INSERT INTO accounts (description,description_short,balance) VALUES (?,?,?)", (name,shortname,startbal))
+		self.conn.commit()
+		self.refresh_balances()
+		
 class fintrackcli(cmd.Cmd):
 	def __init__(self, dbname='fintrack'):
 		cmd.Cmd.__init__(self)
