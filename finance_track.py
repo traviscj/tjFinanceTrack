@@ -66,20 +66,37 @@ class finance_track(object):
 	def display(self,html=False):
 		result = ""
 		lengths = {}
-		format = "{3:3}:{1:12} " + " ".join(["{0["+str(li)+"]:8}" for li in self.ACC.keys() if li not in [1,2]]) + " ${6:9}:{4:2}->{5:2} {2}\n"
+		format = "{3:3}:{1:12} " + " ".join(["{0["+str(li)+"]:8}" for li in self.ACC.keys() if li not in [1,2]]) + " {7:8} ${6:9}:{4:2}->{5:2} {2}\n"
 		if html:
-			format = "<tr><td>{3:3}</td><td>{2}</td><td>{1:12} </td>" + " ".join(["<td>{0["+str(li)+"]:8}</td>" for li in self.ACC.keys() if li not in [1,2]]) + "<td> ${6:9}:{4:2}->{5:2}</td></tr>\n"
+			format = "<tr><td>{3:3}</td><td>{2}</td><td><b>{7}</b></td><td>{1:12} </td>" + " ".join(["<td>{0["+str(li)+"]:8}</td>" for li in self.ACC.keys() if li not in [1,2]]) + "</tr>\n"
 		ACC = deepcopy(self.ACC)
-		if not self.printed_header:
+		# if not self.printed_header:
+		if True:
 			if html: result+= "<table>"
-			result+= format.format(self.ACC_SNAME,'Date','Description',' id','','','')
-			result+= format.format(ACC, '','initial','','','','')
+			result+= format.format(self.ACC_SNAME,'Date','Description',' id','','','','Total')
+			result+= format.format(ACC, '','initial','','','','',sum(ACC.values()))
 			self.printed_header = True
-		tx = self.cur.execute("SELECT * FROM pending_transactions ORDER BY post_date;")
-		for t_id,t_enter_date,t_post_date,from_acc,to_acc,dbal,t_desc in tx:
+		tx = self.cur.execute("SELECT * FROM transactions WHERE is_pending=1 ORDER BY post_date;")
+		
+		for t_id,t_enter_date,t_post_date,from_acc,to_acc,dbal,t_desc,t_ispending in tx:
+			def f(li, fromacc, toacc):
+				if li == fromacc:
+					return "<td>-{6:9}={0["+str(li)+"]:8}</td>"
+				elif li == toacc:
+					return "<td>+{6:9}={0["+str(li)+"]:8}</td>"
+				else:
+					return "<td>{0["+str(li)+"]:8}</td>"
+			if html:
+				format = "<tr><td>{3:3}</td><td>{2}</td><td><b>{7}</b></td><td>{1:12} </td>" + " ".join([f(li, from_acc,to_acc) for li in self.ACC.keys() if li not in [1,2]]) + "</tr>\n"
+			balsum = 0
+			for k,v in ACC.iteritems():
+				if k in [1,2]:
+					continue
+				balsum += ACC[k]
 			ACC[from_acc] -= dbal
 			ACC[to_acc] += dbal
-			result+= format.format(ACC, t_post_date, t_desc, t_id, from_acc, to_acc, dbal)
+			result+= format.format(ACC, t_post_date, t_desc, t_id, from_acc, to_acc, dbal,balsum)
+			
 		if html: 
 			result+= "</table>"
 			return """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -133,12 +150,13 @@ class fintrackcli(cmd.Cmd):
 	def __enter__(self):
 		return self
 	def __exit__(self, type, value, traceback):
+		# print "properly destroying..."
 		self.ft.destroy()
 	
 	def do_ls(self, arg):
 		print self.ft.display()
 	def do_hls(self, arg):
-		table = self.ft.display(html=True)
+		print self.ft.display(html=True)
 	def do_rm(self, arg):
 		try:
 			self.ft.rmtrans(arg)
